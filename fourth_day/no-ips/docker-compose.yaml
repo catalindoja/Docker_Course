@@ -1,0 +1,50 @@
+version: '3.7'
+services:
+  frontend:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./html:/usr/share/nginx/html
+    networks:
+      - frontend_backend_network
+    # install the ping command iputils and don't let the container die.
+    command: sh -c "apk add --no-cache iputils && tail -f /dev/null"
+  backend:
+    image: nginx:alpine
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./app:/app
+    networks:
+      - frontend_backend_network
+      - backend_db_network
+    command: sh -c "apk add --no-cache iputils && tail -f /dev/null"
+  db:
+    image: mariadb:10.3
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: my_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    networks:
+      - backend_db_network
+    
+networks:
+  frontend_backend_network:
+    ipam:
+      driver: default
+      config:
+        - subnet: "192.168.0.0/24"
+
+  backend_db_network:
+    ipam:
+      driver: default
+      config:
+        - subnet: "193.168.9.0/24"
+
+# how can i ping the db from the backend container?
+
+# docker-compose up
+
+# docker-compose exec backend ping db

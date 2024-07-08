@@ -1,0 +1,57 @@
+version: '3.7'
+
+networks:
+  frontend_network:
+    driver: overlay
+  backend_network:
+    driver: overlay
+
+services:
+  frontend:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    networks:
+      - frontend_network
+      - backend_network
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+
+  backend:
+    image: nginx:latest
+    networks:
+      - backend_network
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+
+  db:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: my_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - backend_network
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  db_data:
